@@ -13,34 +13,44 @@
 // }
 // }
 
-pub enum Type {
+use lib::console::Token;
+
+pub enum TypeSpec {
     Integer,
     Float,
     String
 }
 
-pub struct Parameter {
+pub struct ArgSpec {
     name: &'static str,
-    type_: Type,
+    type_spec: TypeSpec,
     description: &'static str
 }
 
 pub struct Command {
     name: &'static str,
-    parameters: &'static [Parameter],
-    function: FnOnce(u64)
-}
-
-fn help (x: u64) {
-
+    description: &'static str,
+    arg_spec: &'static [ArgSpec],
+    function: Box<Fn(&[Token])>
 }
 
 const HELP: Command = Command {
-    name: "Help",
-    parameters: &[
+    name: "help",
+    description: "Help for ",
+    arg_spec: &[
+        ArgSpec {
+            type_spec: TypeSpec::String,
+
+            name: "",
+            description: "Which command to show help for",
+
+        }
 
     ],
-    function: |x| {}
+    function: Box::new(|params| {
+        params[0].unwrap_text();
+
+    })
 };
 
 // const HELP {

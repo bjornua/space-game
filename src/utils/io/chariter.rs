@@ -1,50 +1,24 @@
 use std::io;
-use std::io::Read;
-use std::str::{from_utf8};
-
-// use std::error::Error as StdError;
-
-// use parser::{Command, get_command};
-
-// pub struct ConsoleInput<'a> {
-//     iterator: Box<Iterator<Item = char> + 'a>,
-// }
-// impl<'a> ConsoleInput<'a> {
-//     pub fn new<R: Read + 'a>(stream: R) -> Self {
-//         let stream = stream.chars().take_while(|x| x.is_ok()).filter_map(|x| x.ok());
-
-//         return ConsoleInput {
-//             iterator: Box::new(stream)
-//         }
-//     }
-// }
+use std::str::from_utf8;
 
 
-// impl<'a> Iterator for ConsoleInput<'a> {
-//     type Item = Command;
-//     fn next(&mut self) -> Option<Self::Item> {
-//         return get_command(&mut self.iterator)
-//     }
-// }
-
-
-#[derive(Debug)]
-pub struct CharIterator<R: Read> {
-    buffer: [u8; 6],
+pub struct CharIter<R: io::Read> {
+    buffer: [u8; 512],
     buffer_start: usize,
     buffer_end: usize,
-    buffer_invalid: [u8; 6],
+    buffer_invalid: [u8; 512],
     buffer_invalid_end: usize,
     reader: R,
 }
 
-impl<R: Read> CharIterator<R> {
+
+impl<R: io::Read> CharIter<R> {
     pub fn new(reader: R) -> Self {
-        CharIterator {
-            buffer: [255; 6],
+        CharIter {
+            buffer: [0; 512],
             buffer_start: 0,
             buffer_end: 0,
-            buffer_invalid: [0; 6],
+            buffer_invalid: [0; 512],
             buffer_invalid_end: 0,
             reader: reader,
         }
@@ -96,34 +70,11 @@ impl<R: Read> CharIterator<R> {
             None => None
         }
     }
-    pub fn debug(&self) {
-        println!("\
-            buffer: {:?}\n\
-            buffer_valid_until: {:?}\n\
-            buffer_start: {}\n\
-            buffer_end: {}\n\
-            buffer_invalid: {:?}\n\
-            buffer_invalid_end: {:?}\
-            \n
-        ",
-                 self.buffer,
-                 self.find_invalid(),
-                 self.buffer_start,
-                 self.buffer_end,
-                 self.buffer_invalid,
-                 self.buffer_invalid_end);
-    }
 }
 
-impl<R: Read> Iterator for CharIterator<R> {
+impl<R: io::Read> Iterator for CharIter<R> {
     type Item = char;
     fn next(&mut self) -> Option<Self::Item> {
         return self.consume_char();
     }
 }
-
-// impl<'a> ConsoleInput<'a> {
-//     fn close(&mut self) -> Option<R> {
-//         self.stream.take()
-//     }
-// }

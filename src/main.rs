@@ -1,9 +1,8 @@
 pub mod lib;
 pub mod utils;
-
+pub mod commands;
 
 use std::io::stdin;
-
 use lib::console::CommandIterator;
 
 fn main() {
@@ -13,7 +12,8 @@ fn main() {
     let iter = CommandIterator::new(stdin.lock());
 
     for c in iter {
-        println!("{:?}", c);
+        commands::run(c);
+        // println!("{:?}", c);
     }
 
 

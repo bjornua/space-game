@@ -41,19 +41,16 @@ impl<R: io::Read> CharIter<R> {
 
         let buffer_invalid_begin = self.find_invalid();
         self.buffer_invalid_end = self.buffer_end - buffer_invalid_begin;
-        self.buffer_invalid[..self.buffer_invalid_end].copy_from_slice(&self.buffer[buffer_invalid_begin..self.buffer_end]);
+        self.buffer_invalid[..self.buffer_invalid_end]
+            .copy_from_slice(&self.buffer[buffer_invalid_begin..self.buffer_end]);
         self.buffer_end = buffer_invalid_begin;
         Ok(())
     }
     pub fn find_invalid(&self) -> usize {
         use std::str::Utf8Error;
         match from_utf8(&self.buffer[self.buffer_start..self.buffer_end]) {
-            Err(e@ Utf8Error { .. }) => {
-                self.buffer_start + e.valid_up_to()
-            }
-            Ok(_) => {
-                self.buffer_end
-            }
+            Err(e @ Utf8Error { .. }) => self.buffer_start + e.valid_up_to(),
+            Ok(_) => self.buffer_end,
         }
 
     }
@@ -67,7 +64,7 @@ impl<R: io::Read> CharIter<R> {
                 self.buffer_start += c.len_utf8();
                 Some(c)
             }
-            None => None
+            None => None,
         }
     }
 }

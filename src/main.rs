@@ -12,7 +12,7 @@ fn main() {
     let iter = CommandIterator::new(stdin.lock());
 
     for c in iter {
-        commands::run(c);
+        commands::run(&c);
         // println!("{:?}", c);
     }
 

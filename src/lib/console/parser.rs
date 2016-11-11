@@ -1,27 +1,48 @@
 #[derive(Debug)]
-pub enum Token {
-    Float(Vec<char>),
-    Integer(Vec<char>),
-    Text(Vec<char>),
+
+
+pub enum TokenClass {
+    Float,
+    Integer,
+    Text,
 }
 
+pub struct Token {
+    text: String,
+    class: TokenClass
+}
 
 impl Token {
-    pub fn to_string(self) -> String {
-        match self {
-            Token::Float(chars) |
-            Token::Integer(chars) |
-            Token::Text(chars) => chars.into_iter().collect(),
+    pub fn to_integer(&self) -> Option<i64> {
+        match self.class {
+            TokenClass::Float | TokenClass::Text => {
+                return None
+            }
+            TokenClass::Integer => {
+                self.text.parse().ok()
+            }
+        }
+    }
+    pub fn to_float(&self) -> Option<f64> {
+        match self.class {
+            TokenClass::Float | TokenClass::Integer => {
+                self.text.parse::<f64>().ok()
+            }
+            TokenClass::Text => {
+                return None
+            }
         }
     }
 }
 
+
+
 enum ParserState {
-    Integer(Vec<char>),
+    Integer(String),
     Begin,
-    Text(Vec<char>),
-    TextEscape(Vec<char>),
-    Float(Vec<char>),
+    Text(String),
+    TextEscape(String),
+    Float(String),
     End,
 }
 
@@ -46,15 +67,15 @@ impl ParserState {
                         xs.push(c);
                         (ParserState::Float(xs), None)
                     }
-                    ' ' => (ParserState::Begin, Some(Token::Integer(xs))),
-                    '\n' => (ParserState::End, Some(Token::Integer(xs))),
+                    ' ' => (ParserState::Begin, Some(Token { text: xs, class: TokenClass::Integer })),
+                    '\n' => (ParserState::End, Some(Token { text: xs, class: TokenClass::Integer })),
                     c => ParserState::Text(xs).step(c),
                 }
             }
             ParserState::Float(mut xs) => {
                 match c {
-                    '\n' => (ParserState::End, Some(Token::Float(xs))),
-                    ' ' => (ParserState::Begin, Some(Token::Float(xs))),
+                    '\n' => (ParserState::End, Some(Token { text: xs, class: TokenClass::Float})),
+                    ' ' => (ParserState::Begin, Some(Token { text: xs, class: TokenClass::Float})),
                     c if c.is_digit(10) => {
                         xs.push(c);
                         (ParserState::Float(xs), None)
@@ -64,8 +85,8 @@ impl ParserState {
             }
             ParserState::Text(mut xs) => {
                 match c {
-                    '\n' => (ParserState::End, Some(Token::Text(xs))),
-                    ' ' => (ParserState::Begin, Some(Token::Text(xs))),
+                    '\n' => (ParserState::End, Some(Token { text: xs, class: TokenClass::Text})),
+                    ' ' => (ParserState::Begin, Some(Token{text:xs,class:TokenClass::Text})),
                     '\\' => (ParserState::TextEscape(xs), None),
                     c => {
                         xs.push(c);
@@ -77,7 +98,7 @@ impl ParserState {
                 match c {
                     // No you cannot escape newlines.
                     // If needed consider introducing ['\\', 'n'] instead
-                    '\n' => (ParserState::End, Some(Token::Text(xs))),
+                    '\n' => (ParserState::End, Some(Token{text:xs, class: TokenClass::Text})),
                     c => {
                         xs.push(c);
                         (ParserState::Text(xs), None)

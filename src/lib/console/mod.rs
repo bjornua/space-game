@@ -1,5 +1,5 @@
-mod command;
-mod parser;
+pub mod command;
+pub mod parser;
 
 pub use self::command::CommandIterator;
 pub use self::command::Command;

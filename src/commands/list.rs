@@ -1,0 +1,17 @@
+use super::{Command, Token};
+use super::COMMANDS;
+
+fn run(_: &[Token]) {
+    let mut sorted_list: Vec<_> = COMMANDS.into_iter().collect();
+    sorted_list.sort_by_key(|x| x.name);
+
+    for command in sorted_list {
+        command.print_short();
+    }
+}
+pub const COMMAND: Command = Command {
+    name: "list",
+    description: "List all available commands",
+    args: &[],
+    function: run,
+};

@@ -1,41 +1,49 @@
-#[derive(Debug)]
 
 
-pub enum TokenClass {
+#[derive(Debug, Clone)]
+pub enum TokenKind {
     Float,
     Integer,
     Text,
 }
 
+impl TokenKind {
+    pub fn converts_to(&self, other: &Self) -> bool {
+        match (self, other) {
+            (&TokenKind::Float, &TokenKind::Float) => true,
+            (&TokenKind::Float, &TokenKind::Integer) => false,
+            (&TokenKind::Float, &TokenKind::Text) => true,
+            (&TokenKind::Integer, &TokenKind::Float) => true,
+            (&TokenKind::Integer, &TokenKind::Integer) => true,
+            (&TokenKind::Integer, &TokenKind::Text) => true,
+            (&TokenKind::Text, &TokenKind::Float) => false,
+            (&TokenKind::Text, &TokenKind::Integer) => false,
+            (&TokenKind::Text, &TokenKind::Text) => true,
+        }
+    }
+}
+
+
+#[derive(Debug, Clone)]
 pub struct Token {
-    text: String,
-    class: TokenClass
+    pub text: String,
+    pub kind: TokenKind,
 }
 
 impl Token {
     pub fn to_integer(&self) -> Option<i64> {
-        match self.class {
-            TokenClass::Float | TokenClass::Text => {
-                return None
-            }
-            TokenClass::Integer => {
-                self.text.parse().ok()
-            }
+        if self.kind.converts_to(&TokenKind::Integer) {
+            return self.text.parse::<i64>().ok();
         }
+        return None;
     }
     pub fn to_float(&self) -> Option<f64> {
-        match self.class {
-            TokenClass::Float | TokenClass::Integer => {
-                self.text.parse::<f64>().ok()
-            }
-            TokenClass::Text => {
-                return None
-            }
+        if self.kind.converts_to(&TokenKind::Float) {
+            return self.text.parse().ok();
         }
+        return None;
     }
 }
-
-
 
 enum ParserState {
     Integer(String),
@@ -46,19 +54,42 @@ enum ParserState {
     End,
 }
 
+fn emptystr() -> String {
+    String::with_capacity(20)
+}
+fn charstr(i: char) -> String {
+    let mut s = emptystr();
+    s.push(i);
+    s
+}
 
 impl ParserState {
     fn step(self, c: char) -> (Self, Option<Token>) {
         match self {
             ParserState::Begin => {
                 match c {
-                    c @ '-' => (ParserState::Integer(vec![c]), None),
                     ' ' => (ParserState::Begin, None),
-                    c => ParserState::Integer(vec![]).step(c),
+                    '\n' => (ParserState::End, None),
+                    c @ '-' => (ParserState::Integer(charstr(c)), None),
+                    c => ParserState::Integer(emptystr()).step(c),
                 }
             }
             ParserState::Integer(mut xs) => {
                 match c {
+                    ' ' => {
+                        (ParserState::Begin,
+                         Some(Token {
+                            text: xs,
+                            kind: TokenKind::Integer,
+                        }))
+                    }
+                    '\n' => {
+                        (ParserState::End,
+                         Some(Token {
+                            text: xs,
+                            kind: TokenKind::Integer,
+                        }))
+                    }
                     c if c.is_digit(10) => {
                         xs.push(c);
                         (ParserState::Integer(xs), None)
@@ -67,15 +98,25 @@ impl ParserState {
                         xs.push(c);
                         (ParserState::Float(xs), None)
                     }
-                    ' ' => (ParserState::Begin, Some(Token { text: xs, class: TokenClass::Integer })),
-                    '\n' => (ParserState::End, Some(Token { text: xs, class: TokenClass::Integer })),
                     c => ParserState::Text(xs).step(c),
                 }
             }
             ParserState::Float(mut xs) => {
                 match c {
-                    '\n' => (ParserState::End, Some(Token { text: xs, class: TokenClass::Float})),
-                    ' ' => (ParserState::Begin, Some(Token { text: xs, class: TokenClass::Float})),
+                    '\n' => {
+                        (ParserState::End,
+                         Some(Token {
+                            text: xs,
+                            kind: TokenKind::Float,
+                        }))
+                    }
+                    ' ' => {
+                        (ParserState::Begin,
+                         Some(Token {
+                            text: xs,
+                            kind: TokenKind::Float,
+                        }))
+                    }
                     c if c.is_digit(10) => {
                         xs.push(c);
                         (ParserState::Float(xs), None)
@@ -85,8 +126,20 @@ impl ParserState {
             }
             ParserState::Text(mut xs) => {
                 match c {
-                    '\n' => (ParserState::End, Some(Token { text: xs, class: TokenClass::Text})),
-                    ' ' => (ParserState::Begin, Some(Token{text:xs,class:TokenClass::Text})),
+                    '\n' => {
+                        (ParserState::End,
+                         Some(Token {
+                            text: xs,
+                            kind: TokenKind::Text,
+                        }))
+                    }
+                    ' ' => {
+                        (ParserState::Begin,
+                         Some(Token {
+                            text: xs,
+                            kind: TokenKind::Text,
+                        }))
+                    }
                     '\\' => (ParserState::TextEscape(xs), None),
                     c => {
                         xs.push(c);
@@ -98,7 +151,13 @@ impl ParserState {
                 match c {
                     // No you cannot escape newlines.
                     // If needed consider introducing ['\\', 'n'] instead
-                    '\n' => (ParserState::End, Some(Token{text:xs, class: TokenClass::Text})),
+                    '\n' => {
+                        (ParserState::End,
+                         Some(Token {
+                            text: xs,
+                            kind: TokenKind::Text,
+                        }))
+                    }
                     c => {
                         xs.push(c);
                         (ParserState::Text(xs), None)
@@ -131,20 +190,18 @@ impl<T: Iterator<Item = char>> Iterator for Tokenizer<T> {
             None => return None,
         };
 
-        if let ParserState::End = state {
-            return None;
-        }
-
-        for c in &mut self.chars {
-            let (new_state, token) = state.step(c);
-
-            state = new_state;
-            if token.is_some() {
-                self.state = Some(state);
-                return token;
+        loop {
+            if let ParserState::End = state {
+                return None;
             }
-
+            if let Some(c) = self.chars.next() {
+                let (new_state, token) = state.step(c);
+                state = new_state;
+                if token.is_some() {
+                    self.state = Some(state);
+                    return token;
+                }
+            }
         }
-        return None;
     }
 }

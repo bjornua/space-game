@@ -1,6 +1,6 @@
 use std::io::{Read, Write};
 
-use super::parser::{Token, Tokenizer};
+use super::parser::{self, Token, Tokenizer};
 use utils::io::CharIter;
 
 
@@ -10,11 +10,28 @@ pub struct Command {
     pub arguments: Vec<Token>,
 }
 
+pub enum Error {
+    EOF,
+    MissingName
+}
 
-pub fn get_command<T: Iterator<Item = char>>(iter: &mut T) -> Option<Command> {
+pub fn get_command<T: Iterator<Item = char>>(iter: &mut T) -> Result<Command, Error> {
     let mut tokens = Tokenizer::new(iter);
 
-    tokens.next().map(|name| Command{name: name.text, arguments: tokens.collect() })
+    let name = match tokens.next() {
+        Some(Err(parser::Error::EOF)) => return Err(Error::EOF),
+        Some(Ok(n)) => n,
+        None => return Err(Error::MissingName)
+    };
+
+    let arguments: Result<Vec<_>, parser::Error> = tokens.collect();
+
+    match arguments {
+        Err(parser::Error::EOF) => return Err(Error::EOF),
+        Ok(arguments) => {
+            Ok(Command { name: name.text, arguments: arguments })
+        }
+    }
 }
 
 
@@ -33,13 +50,16 @@ impl<R: Read, W: Write> CommandIterator<R, W> {
 impl<R: Read, W: Write> Iterator for CommandIterator<R, W> {
     type Item = Command;
     fn next(&mut self) -> Option<Self::Item> {
+        write!(self.stream_out, "\n").unwrap();
         loop {
             write!(self.stream_out, "[Command]: ").unwrap();
             self.stream_out.flush().unwrap();
 
-            if let Some(c) =  get_command(&mut self.iterator) {
-                println!("{:?}", c);
-                return Some(c)
+            match get_command(&mut self.iterator) {
+                Err(Error::MissingName) => continue,
+                Err(Error::EOF) => return None,
+                Ok(command) => {writeln!(self.stream_out, "").unwrap();
+                return Some(command)}
             }
         }
     }

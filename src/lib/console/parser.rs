@@ -1,10 +1,24 @@
-
+pub enum Error {
+    EOF
+}
 
 #[derive(Debug, Clone)]
 pub enum TokenKind {
     Float,
     Integer,
     Text,
+}
+use std::fmt;
+
+impl fmt::Display for TokenKind {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = match *self {
+            TokenKind::Float => "float",
+            TokenKind::Integer => "int",
+            TokenKind::Text => "string",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 impl TokenKind {
@@ -183,23 +197,28 @@ impl<T: Iterator<Item = char>> Tokenizer<T> {
     }
 }
 impl<T: Iterator<Item = char>> Iterator for Tokenizer<T> {
-    type Item = Token;
+    type Item = Result<Token, Error>;
     fn next(&mut self) -> Option<Self::Item> {
         let mut state = match self.state.take() {
             Some(state) => state,
             None => return None,
         };
-
         loop {
             if let ParserState::End = state {
-                return None;
+                self.state = Some(state);
+                return None
             }
-            if let Some(c) = self.chars.next() {
-                let (new_state, token) = state.step(c);
-                state = new_state;
-                if token.is_some() {
-                    self.state = Some(state);
-                    return token;
+            match self.chars.next() {
+                Some(c) => {
+                    let (new_state, token) = state.step(c);
+                    state = new_state;
+                    if token.is_some() {
+                        self.state = Some(state);
+                        return token.map(|x| Ok(x))
+                    }
+                }
+                None => {
+                    return Some(Err(Error::EOF))
                 }
             }
         }

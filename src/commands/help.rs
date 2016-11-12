@@ -1,8 +1,8 @@
-use super::{Argument, Command, Token, TokenKind};
+use super::{Argument, ArgSpec, ArgumentType, Command};
 use super::find_command;
 
-fn help(args: &[Token]) {
-    let command_name = &args[0].text;
+fn help(args: &[Argument]) {
+    let command_name = args[0].unwrap_str();
 
     let command = match find_command(command_name) {
         Some(c) => c,
@@ -18,8 +18,8 @@ fn help(args: &[Token]) {
 pub const COMMAND: Command = Command {
     name: "help",
     description: "Shows the full description of {command_name}",
-    args: &[Argument {
-                kind: TokenKind::Text,
+    args: &[ArgSpec {
+                kind: ArgumentType::String,
                 name: "command_name",
                 description: "The name of the command",
             }],

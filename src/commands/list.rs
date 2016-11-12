@@ -1,7 +1,7 @@
-use super::{Command, Token};
+use super::{Command, Argument};
 use super::COMMANDS;
 
-fn run(_: &[Token]) {
+fn run(_: &[Argument]) {
     let mut sorted_list: Vec<_> = COMMANDS.into_iter().collect();
     sorted_list.sort_by_key(|x| x.name);
 

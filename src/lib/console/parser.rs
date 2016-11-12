@@ -8,55 +8,11 @@ pub enum TokenKind {
     Integer,
     Text,
 }
-use std::fmt;
-
-impl fmt::Display for TokenKind {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = match *self {
-            TokenKind::Float => "float",
-            TokenKind::Integer => "int",
-            TokenKind::Text => "string",
-        };
-        write!(f, "{}", s)
-    }
-}
-
-impl TokenKind {
-    pub fn converts_to(&self, other: &Self) -> bool {
-        match (self, other) {
-            (&TokenKind::Float, &TokenKind::Float) => true,
-            (&TokenKind::Float, &TokenKind::Integer) => false,
-            (&TokenKind::Float, &TokenKind::Text) => true,
-            (&TokenKind::Integer, &TokenKind::Float) => true,
-            (&TokenKind::Integer, &TokenKind::Integer) => true,
-            (&TokenKind::Integer, &TokenKind::Text) => true,
-            (&TokenKind::Text, &TokenKind::Float) => false,
-            (&TokenKind::Text, &TokenKind::Integer) => false,
-            (&TokenKind::Text, &TokenKind::Text) => true,
-        }
-    }
-}
-
 
 #[derive(Debug, Clone)]
 pub struct Token {
     pub text: String,
     pub kind: TokenKind,
-}
-
-impl Token {
-    pub fn to_integer(&self) -> Option<i64> {
-        if self.kind.converts_to(&TokenKind::Integer) {
-            return self.text.parse::<i64>().ok();
-        }
-        return None;
-    }
-    pub fn to_float(&self) -> Option<f64> {
-        if self.kind.converts_to(&TokenKind::Float) {
-            return self.text.parse().ok();
-        }
-        return None;
-    }
 }
 
 enum ParserState {

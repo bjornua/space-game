@@ -1,6 +1,7 @@
 pub mod lib;
 pub mod utils;
 pub mod commands;
+pub mod objects;
 
 use lib::console::CommandIterator;
 use std::io::{stdin, stdout};

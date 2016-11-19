@@ -1,4 +1,4 @@
-use super::{Command, Argument};
+use super::{Argument, Command};
 use super::COMMANDS;
 
 fn run(_: &[Argument]) {

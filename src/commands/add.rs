@@ -1,4 +1,4 @@
-use super::{ArgSpec, Command, Argument, ArgumentType};
+use super::{ArgSpec, Argument, ArgumentType, Command};
 
 
 fn add(args: &[Argument]) {

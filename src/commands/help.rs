@@ -1,4 +1,4 @@
-use super::{Argument, ArgSpec, ArgumentType, Command};
+use super::{ArgSpec, Argument, ArgumentType, Command};
 use super::find_command;
 
 fn help(args: &[Argument]) {

@@ -12,7 +12,7 @@ pub struct Command {
 
 pub enum Error {
     EOF,
-    MissingName
+    MissingName,
 }
 
 pub fn get_command<T: Iterator<Item = char>>(iter: &mut T) -> Result<Command, Error> {
@@ -21,7 +21,7 @@ pub fn get_command<T: Iterator<Item = char>>(iter: &mut T) -> Result<Command, Er
     let name = match tokens.next() {
         Some(Err(parser::Error::EOF)) => return Err(Error::EOF),
         Some(Ok(n)) => n,
-        None => return Err(Error::MissingName)
+        None => return Err(Error::MissingName),
     };
 
     let arguments: Result<Vec<_>, parser::Error> = tokens.collect();
@@ -29,7 +29,10 @@ pub fn get_command<T: Iterator<Item = char>>(iter: &mut T) -> Result<Command, Er
     match arguments {
         Err(parser::Error::EOF) => return Err(Error::EOF),
         Ok(arguments) => {
-            Ok(Command { name: name.text, arguments: arguments })
+            Ok(Command {
+                name: name.text,
+                arguments: arguments,
+            })
         }
     }
 }
@@ -43,7 +46,10 @@ pub struct CommandIterator<R: Read, W: Write> {
 
 impl<R: Read, W: Write> CommandIterator<R, W> {
     pub fn new(stream_in: R, stream_out: W) -> Self {
-        return CommandIterator { iterator: CharIter::new(stream_in), stream_out: stream_out};
+        return CommandIterator {
+            iterator: CharIter::new(stream_in),
+            stream_out: stream_out,
+        };
     }
 }
 
@@ -58,8 +64,10 @@ impl<R: Read, W: Write> Iterator for CommandIterator<R, W> {
             match get_command(&mut self.iterator) {
                 Err(Error::MissingName) => continue,
                 Err(Error::EOF) => return None,
-                Ok(command) => {writeln!(self.stream_out, "").unwrap();
-                return Some(command)}
+                Ok(command) => {
+                    writeln!(self.stream_out, "").unwrap();
+                    return Some(command);
+                }
             }
         }
     }

@@ -3,14 +3,11 @@ mod list;
 mod add;
 use lib::console::command;
 use lib::console::parser::{Token, TokenKind};
-use std::num::{ParseIntError, ParseFloatError};
+use std::num::{ParseFloatError, ParseIntError};
 
 #[derive(Debug)]
 pub enum ArgumentError {
-    WrongType {
-        token: Token,
-        target: ArgumentType
-    },
+    WrongType { token: Token, target: ArgumentType },
     ParseIntError(ParseIntError),
     ParseFloatError(ParseFloatError),
 }
@@ -31,8 +28,8 @@ impl StdError for ArgumentError {
     fn cause(&self) -> Option<&StdError> {
         match *self {
             ArgumentError::WrongType { .. } => None,
-            ArgumentError::ParseIntError (ref e) => Some(e),
-            ArgumentError::ParseFloatError (ref e) => Some(e),
+            ArgumentError::ParseIntError(ref e) => Some(e),
+            ArgumentError::ParseFloatError(ref e) => Some(e),
         }
     }
 }
@@ -62,27 +59,25 @@ impl ArgumentType {
             (&TokenKind::Integer, &ArgumentType::Integer) => {
                 match token.text.parse::<i64>() {
                     Ok(i) => Ok(Argument::Integer(i)),
-                    Err(e) => Err(ArgumentError::ParseIntError(e))
+                    Err(e) => Err(ArgumentError::ParseIntError(e)),
                 }
-            },
+            }
             (&TokenKind::Integer, &ArgumentType::Float) |
             (&TokenKind::Float, &ArgumentType::Float) => {
                 match token.text.parse::<f64>() {
                     Ok(i) => Ok(Argument::Float(i)),
-                    Err(e) => Err(ArgumentError::ParseFloatError(e))
+                    Err(e) => Err(ArgumentError::ParseFloatError(e)),
                 }
             }
             (&TokenKind::Float, &ArgumentType::String) |
             (&TokenKind::Integer, &ArgumentType::String) |
-            (&TokenKind::Text, &ArgumentType::String) => {
-                Ok(Argument::String(token.text.clone()))
-            }
+            (&TokenKind::Text, &ArgumentType::String) => Ok(Argument::String(token.text.clone())),
             (&TokenKind::Text, &ArgumentType::Float) |
             (&TokenKind::Float, &ArgumentType::Integer) |
             (&TokenKind::Text, &ArgumentType::Integer) => {
                 Err(ArgumentError::WrongType {
                     token: token.clone(),
-                    target: (*self).clone()
+                    target: (*self).clone(),
                 })
             }
         }
@@ -151,7 +146,10 @@ impl fmt::Debug for Command {
 enum ErrorKind {
     TooFewArguments,
     TooManyArguments,
-    ArgumentError { arg_spec: &'static ArgSpec, error: ArgumentError},
+    ArgumentError {
+        arg_spec: &'static ArgSpec,
+        error: ArgumentError,
+    },
 }
 use std::error::Error as StdError;
 
@@ -160,15 +158,14 @@ impl StdError for Error {
         match self.kind {
             ErrorKind::TooFewArguments => "Not enough arguments",
             ErrorKind::TooManyArguments => "Too many arguments",
-            ErrorKind::ArgumentError{ .. }  => "Argument error",
+            ErrorKind::ArgumentError { .. } => "Argument error",
         }
     }
     fn cause(&self) -> Option<&StdError> {
         match self.kind {
-            ErrorKind::TooFewArguments | ErrorKind::TooManyArguments => {
-                None
-            }
-            ErrorKind::ArgumentError { ref error, .. } => { Some(error) }
+            ErrorKind::TooFewArguments |
+            ErrorKind::TooManyArguments => None,
+            ErrorKind::ArgumentError { ref error, .. } => Some(error),
         }
     }
 }
@@ -177,9 +174,8 @@ impl fmt::Display for Error {
         match self.kind {
             ErrorKind::TooFewArguments |
             ErrorKind::TooManyArguments => self.description().fmt(f),
-            ErrorKind::ArgumentError{ arg_spec, .. } => {
+            ErrorKind::ArgumentError { arg_spec, .. } => {
                 format!("{}: {}", self.description(), arg_spec).fmt(f)
-
             }
         }
     }
@@ -209,16 +205,25 @@ impl Command {
                 kind: ErrorKind::TooManyArguments,
             });
         }
-        let args: Result<Vec<_>, Error> = self.args.into_iter().zip(args).map(|(arg_spec, token)| {
-            match arg_spec.kind.convert(token) {
-                Ok(s) => Ok(s),
-                Err(e) => Err(Error {
-                    command: self,
-                    arguments: args.to_vec(),
-                    kind: ErrorKind::ArgumentError { error: e, arg_spec: arg_spec }
-                })
-            }
-        }).collect();
+        let args: Result<Vec<_>, Error> = self.args
+            .into_iter()
+            .zip(args)
+            .map(|(arg_spec, token)| {
+                match arg_spec.kind.convert(token) {
+                    Ok(s) => Ok(s),
+                    Err(e) => {
+                        Err(Error {
+                            command: self,
+                            arguments: args.to_vec(),
+                            kind: ErrorKind::ArgumentError {
+                                error: e,
+                                arg_spec: arg_spec,
+                            },
+                        })
+                    }
+                }
+            })
+            .collect();
         let args = try!(args);
         (self.function)(&args);
         Ok(())

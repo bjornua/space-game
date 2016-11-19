@@ -1,5 +1,5 @@
 pub enum Error {
-    EOF
+    EOF,
 }
 
 #[derive(Debug, Clone)]
@@ -162,7 +162,7 @@ impl<T: Iterator<Item = char>> Iterator for Tokenizer<T> {
         loop {
             if let ParserState::End = state {
                 self.state = Some(state);
-                return None
+                return None;
             }
             match self.chars.next() {
                 Some(c) => {
@@ -170,12 +170,10 @@ impl<T: Iterator<Item = char>> Iterator for Tokenizer<T> {
                     state = new_state;
                     if token.is_some() {
                         self.state = Some(state);
-                        return token.map(|x| Ok(x))
+                        return token.map(|x| Ok(x));
                     }
                 }
-                None => {
-                    return Some(Err(Error::EOF))
-                }
+                None => return Some(Err(Error::EOF)),
             }
         }
     }

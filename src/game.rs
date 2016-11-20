@@ -1,23 +1,31 @@
+type Time = u64;
 type PlayerId = u64;
-type FloatingId = u64;
+type ObjectId = u64;
 
 struct Location {
     x: u64,
     y: u64,
 }
 
-struct Item {
+struct Item;
 
+
+enum MissionType {
+    GoTo {
+        location: Location
+    }
 }
 
-enum ObjectClass {
-    Debris()
+struct Mission {
+    begin: Time,
+    type: MissionType
 }
 
-struct  {
-    id: u64,
+struct WorldObject {
+    id: ObjectId,
     owner: Option<PlayerId>,
     location: Location,
+    mission: Path
 }
 
 struct Player {

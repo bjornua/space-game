@@ -72,18 +72,20 @@ impl Items {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Item {
-    pub name: &'static str,
-    pub components: &'static [Quantity],
+pub enum ObjectKind {
+    Component
+    Container {
+        capacity:
+    }
 }
 
-// use std::hash::{Hash, Hasher};
-// impl Hash for Item {
-//     fn hash<H: Hasher>(&self, state: &mut H) {
-//         self.name.hash(state);
-//     }
-// }
+
+#[derive(Debug, Clone)]
+pub struct Object {
+    pub name: &'static str,
+    pub components: &'static [Quantity],
+    pub object_kind: ObjectKind
+}
 
 
 #[derive(Debug)]

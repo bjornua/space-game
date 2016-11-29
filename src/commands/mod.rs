@@ -1,9 +1,14 @@
 mod help;
 mod list;
 mod add;
+mod scan;
+
 use lib::console::command;
 use lib::console::parser::{Token, TokenKind};
 use std::num::{ParseFloatError, ParseIntError};
+
+const COMMANDS: &'static [Command] = &[help::COMMAND, list::COMMAND, add::COMMAND, scan::COMMAND];
+
 
 #[derive(Debug)]
 pub enum ArgumentError {
@@ -257,9 +262,6 @@ impl Command {
         // println!(" - {}", self.description);
     }
 }
-
-const COMMANDS: &'static [Command] = &[help::COMMAND, list::COMMAND, add::COMMAND];
-
 
 fn find_command(name: &str) -> Option<&'static Command> {
     for x in COMMANDS {

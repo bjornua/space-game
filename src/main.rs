@@ -2,6 +2,7 @@ pub mod lib;
 pub mod utils;
 pub mod commands;
 pub mod items;
+pub mod game;
 
 use lib::console::CommandIterator;
 use std::error::Error as StdError;
@@ -26,9 +27,9 @@ fn main_err() -> Result<(), Error> {
 
     let iter = CommandIterator::new(stdin, stdout);
 
-    let items = try!(items::Items::compile());
+    let _ = try!(items::Items::compile());
 
-    println!("{:#?}", items);
+    // println!("{:#?}", items);
 
     for c in iter {
         commands::run(&c);

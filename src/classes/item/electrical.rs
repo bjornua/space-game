@@ -14,5 +14,3 @@ pub const SOLAR_ARRAY: Item = Item {
     ],
 };
 
-
-pub const SOLAR_ARRA

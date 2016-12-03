@@ -1,11 +1,32 @@
+
+#[derive(Debug, Clone)]
+pub struct Object {
+    pub name: &'static str,
+    pub components: &'static [Quantity],
+    pub object_kind: ObjectKind
+}
+
+
+#[derive(Debug)]
+pub struct Quantity {
+    pub item: &'static str,
+    pub amount: u64,
+}
+
+
+pub struct Container {
+    pub id: u64,
+    pub items: Vec<Quantity>,
+}
+
+
+
 use std::collections::{HashMap, VecDeque};
 // use std::iter::;
 
 mod atoms;
 mod silicon;
 use std::error::Error as StdError;
-// mod structure;
-// mod electrical;
 
 
 #[derive(Debug)]
@@ -79,23 +100,3 @@ pub enum ObjectKind {
     }
 }
 
-
-#[derive(Debug, Clone)]
-pub struct Object {
-    pub name: &'static str,
-    pub components: &'static [Quantity],
-    pub object_kind: ObjectKind
-}
-
-
-#[derive(Debug)]
-pub struct Quantity {
-    pub item: &'static str,
-    pub amount: u64,
-}
-
-
-pub struct Container {
-    pub id: u64,
-    pub items: Vec<Quantity>,
-}

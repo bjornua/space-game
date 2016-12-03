@@ -11,6 +11,11 @@ pub fn generate_gamestate() -> GameState {
     }
 }
 
+struct Object {
+
+}
+
+
 
 // type Time = u64;
 // type PlayerId = u64;

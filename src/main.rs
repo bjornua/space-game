@@ -1,7 +1,7 @@
 pub mod lib;
 pub mod utils;
 pub mod commands;
-pub mod items;
+pub mod classes;
 pub mod game;
 
 use lib::console::CommandIterator;

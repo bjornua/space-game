@@ -1,0 +1,4 @@
+struct Object {
+    location: Point,
+
+}
